@@ -3,9 +3,13 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
     Json, Router,
+    extract::Query
 };
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
+use std::collections::HashMap;
+
+// Check tower crate, tokio blog on serve trait
 
 #[tokio::main]
 async fn main() {
@@ -22,9 +26,15 @@ async fn main() {
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let (shutdown, rx) = tokio::sync::oneshot::channel::<()>();
+    // shutdown.send(());
     tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
+        .with_graceful_shutdown(async move {
+            let _ = rx.await;
+            //println!("graceful shutdown");
+        })
         .await
         .unwrap();
 }
@@ -37,8 +47,10 @@ async fn root() -> &'static str {
 async fn create_user(
     // this argument tells axum to parse the request body
     // as JSON into a `CreateUser` type
+    Query(param): Query<HashMap<String, String>>,
     Json(payload): Json<CreateUser>,
 ) -> (StatusCode, Json<User>) {
+    param.get("my");
     // insert your application logic here
     let user = User {
         id: 1337,
