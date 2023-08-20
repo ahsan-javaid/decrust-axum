@@ -11,4 +11,8 @@ cargo r
 http://localhost:3000
 ```
 
-### 
+### Entities
+- Users
+- Posts
+
+Users (1)----(*) Posts
